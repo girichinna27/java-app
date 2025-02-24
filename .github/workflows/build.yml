@@ -1,6 +1,4 @@
-# .github/workflows/build.yml
-
-name: Java Build and Artifact Upload
+name: Build and Push Multiple JARs to JFrog
 
 on:
   push:
@@ -11,30 +9,42 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        module: [service1, service2, service3]  # Define your multiple jar-producing modules
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Set up JDK 17
+      - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'maven'
 
-      - name: Build with Maven
-        run: mvn clean package
-
-      - name: Upload JAR/WAR as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: java-artifact
-          path: target/*.jar
-      - name: Upload to JFrog Artifactory
+      - name: Build JAR for ${{ matrix.module }}
         run: |
-          curl -u "${{ secrets.JFROG_USERNAME }}:${{ secrets.JFROG_PASSWORD }}" \
-               -T target/*.jar \
-               "https://triald1s5gy.jfrog.io/artifactory/my-jar-repo/"
+          cd ${{ matrix.module }}
+          mvn clean package -DskipTests
+          cd ..
+
+      - name: Upload JAR to GitHub Artifacts (Optional)
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.module }}-jar
+          path: ${{ matrix.module }}/target/*.jar
+
+      - name: Push JAR to JFrog Artifactory
+        env:
+          JFROG_USERNAME: ${{ secrets.JFROG_USERNAME }}
+          JFROG_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
+          JFROG_URL: "https://your-jfrog-instance/artifactory"
+        run: |
+          JAR_FILE=$(ls ${{ matrix.module }}/target/*.jar | head -n 1)
+          curl -u "$JFROG_USERNAME:$JFROG_PASSWORD" \
+               -T "$JAR_FILE" \
+               "$JFROG_URL/my-jar-repo/${{ matrix.module }}/$(basename $JAR_FILE)"
