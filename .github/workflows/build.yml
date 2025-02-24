@@ -33,7 +33,7 @@ jobs:
           cd ..
 
       - name: Upload JAR to GitHub Artifacts (Optional)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.module }}-jar
           path: ${{ matrix.module }}/target/*.jar
