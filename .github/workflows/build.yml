@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        module: [service1, service2, service3]  # Define your multiple jar-producing modules
+        module: [service1, service2]  # Define your multiple jar-producing modules
 
     steps:
       - name: Checkout Repository
@@ -42,9 +42,9 @@ jobs:
         env:
           JFROG_USERNAME: ${{ secrets.JFROG_USERNAME }}
           JFROG_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
-          JFROG_URL: "https://triald1s5gy.jfrog.io/artifactory"
+          JFROG_URL: "https://hanu14.jfrog.io/artifactory"
         run: |
           JAR_FILE=$(ls ${{ matrix.module }}/target/*.jar | head -n 1)
           curl -u "$JFROG_USERNAME:$JFROG_PASSWORD" \
                -T "$JAR_FILE" \
-               "$JFROG_URL/my-jar-repo/${{ matrix.module }}/$(basename $JAR_FILE)"
+               "$JFROG_URL/ssd-jar/${{ matrix.module }}/$(basename $JAR_FILE)"
